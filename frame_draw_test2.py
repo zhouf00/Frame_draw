@@ -2,7 +2,7 @@ import wx
 from threading import Thread
 from wx import adv
 from wx.lib import plot
-from Matplotlib_test1 import *
+from Matplotlib_test2 import *
 from test_data import *
 
 
@@ -100,15 +100,26 @@ class MyFrame(wx.Frame):
         self.CreateStatusBar()
 
     def _func_event(self):
-        pass
+        self.Bind(wx.EVT_MOVE, self.on_move)
 
     def test_draw(self, draw1):
-        data = [[1, 10], [2, 5], [3, 10], [4, 5]]
-        line = plot.PolyLine(data, colour="red", width=1)
-        data2 = [[1, 12], [2, 9], [3, 20], [4, 5]]
+        data1, data2, data3 = test_numpy()
+        line1 = plot.PolyLine(data1, colour="red", width=1)
         line2 = plot.PolyLine(data2, colour="green", width=1)
-        gc = plot.PlotGraphics([line, line2], "test", "x", "y")
+        line3 = plot.PolyLine(data3, colour="blue", width=1)
+        #gc = plot.PlotGraphics([line1, ], "test", "x", "y")
+        #gc = plot.PlotGraphics([line1, line2, line3], "test", "x", "y")
+        #gc = plot.PlotGraphics([line2, line1, line3], "test", "x", "y")
+        gc = plot.PlotGraphics([line3, line2, line1], "test", "x", "y")
         return gc
+
+    def test2_draw(self):
+        pass
+
+    def on_move(self, e):
+        x, y = e.GetPosition()
+        print("x:%s\ny:%s"%(x,y))
+
 
 if __name__ == '__main__':
     app = wx.App()
