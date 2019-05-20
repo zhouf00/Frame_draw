@@ -1,6 +1,6 @@
+import numpy as np
 
-
-class ParaEMD():
+class ParaEMD(object):
 
     def __init__(self):
         self.FengChang = ['国电电力宁海茶山风电场', '华能围场桃山湖风电场']
@@ -14,3 +14,7 @@ class ParaEMD():
     def aaa(self):
         res = ["2019-5-20", "2019-5-21", "2019-5-22", "2019-5-24", "2019-5-25"]
         return res
+
+    def bbb(self):
+        data1 = np.random.rand(50,2)
+        return data1

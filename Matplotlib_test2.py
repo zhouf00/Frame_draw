@@ -1,6 +1,4 @@
 import os
-import wx
-import matplotlib.pyplot as plt # 导入作图库
 import numpy as np
 
 

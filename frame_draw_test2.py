@@ -10,7 +10,7 @@ class MyFrame(wx.Frame):
 
     def __init__(self, *args, **kw):
         super(MyFrame, self).__init__(*args, **kw)
-        self.SetSize((800, 600))
+        self.SetSize((800, 650))
         self.SetTitle("风机采集图形化v1")
 
         # 面板设计
@@ -30,7 +30,7 @@ class MyFrame(wx.Frame):
         hb2 = wx.BoxSizer(wx.HORIZONTAL)
         hb3 = wx.BoxSizer(wx.HORIZONTAL)
         hb3_v1 = wx.BoxSizer(wx.VERTICAL)
-        hb3_h2 = wx.BoxSizer(wx.HORIZONTAL)
+        hb3_v2 = wx.BoxSizer(wx.VERTICAL)
 
         ######################################
         # 第一层 配置文件
@@ -88,30 +88,39 @@ class MyFrame(wx.Frame):
         self.hb3_v_ch5 = wx.Choice(pnl, choices=ParaEMD().LblListLcn)
         self.hb3_v_ch5.SetSelection(2)
         hb3_text6 = wx.StaticBoxSizer(wx.StaticBox(pnl, 0, label=u"时间选择"), wx.VERTICAL)
-        hb3_text6_box = wx.BoxSizer(wx.VERTICAL)
-        self.hb3_v_ch7 = wx.ListBox(pnl, choices=[], style=wx.LB_SINGLE)
+        self.hb3_v_ch7 = wx.Choice(pnl, choices=[])
+        #self.hb3_v_ch7 = wx.ListBox(pnl, choices=[], style=wx.LB_SINGLE)
+        hb3_text8 = wx.StaticBoxSizer(wx.StaticBox(pnl, 0, label=u"浮值选择"),wx.HORIZONTAL)
+        self.hb3_v_lc9 = wx.TextCtrl(pnl, size=(50, 25), value="100")
+        hb3_text8_line = wx.StaticText(pnl, label=u"----")
+        self.hb3_v_lc11 = wx.TextCtrl(pnl,  size=(50, 25), value="400")
         self.hb3_v_button6 = wx.Button(pnl, label=u"显示")
 
         hb3_text2.AddMany([(self.hb3_v_ch3, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                            (self.hb3_v_ch4, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                            (self.hb3_v_ch5, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                            ])
-        #hb3_text6_box.Add(self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
-        hb3_text6.AddMany([#(hb3_text6_box, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           (self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+        hb3_text6.AddMany([(self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+                           ])
+        hb3_text8.AddMany([(self.hb3_v_lc9, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+                           (hb3_text8_line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+                           (self.hb3_v_lc11, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                            ])
 
         hb3_v1.AddMany([(self.hb3_v_box1, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                         (hb3_text2, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                         (hb3_text6, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+                        (hb3_text8, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                         (self.hb3_v_button6, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                            ])
         ######################################
         # 第三层右侧 配置文件
         ######################################
-        hb3_v_draw = self.test_draw(pnl)
-
-        hb3_h2.Add(hb3_v_draw, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
+        hb3_v_draw1 = self.test_draw(pnl)
+        hb3_v_draw2 = self.test2_draw(pnl)
+        hb3_v2.AddMany([(hb3_v_draw1, 2, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+                        (hb3_v_draw2, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
+                        ])
         ######################################
         # 所有面板汇合
         ######################################
@@ -119,7 +128,7 @@ class MyFrame(wx.Frame):
         h2_line = wx.StaticLine(pnl,wx.ID_ANY, style=wx.LI_VERTICAL)
         hb3.AddMany([(hb3_v1, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                      (h2_line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                     (hb3_h2, 3, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),])
+                     (hb3_v2, 3, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),])
         vb.AddMany([(hb1, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                     (hb2, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
                     (h1_line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
@@ -129,8 +138,7 @@ class MyFrame(wx.Frame):
         self.CreateStatusBar()
 
         #　传面板参数
-        print("info",hb3_text6)
-        self.res = self._frame_res(pnl, hb3_text6, hb3_v1)
+        self.res = [pnl, hb3_text6, hb3_v1]
 
     def _func_event(self):
         self.Bind(wx.EVT_MOVE, self.on_move)
@@ -151,6 +159,7 @@ class MyFrame(wx.Frame):
                                args=(wind_f, wind_m, wind_b, signal_t, begin_t, end_t,))
         _start_thread.start()
         a = ParaEMD().aaa()
+
         self.res[1].Clear(True)
         self.hb3_v_ch7 = wx.Choice(self.res[0], choices=a)
         self.res[1].Add(self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
@@ -180,8 +189,6 @@ class MyFrame(wx.Frame):
         end_time = args[5]
         #ParaEMD().EMDTRS(location, fan, fanid, typedata, start_time, end_time)
 
-
-
     def _show_func(self, *args):
         """
         显示函数，外部函数实现，传入参数
@@ -197,8 +204,10 @@ class MyFrame(wx.Frame):
         data1, data2, data3 = test_numpy()
         line1 = plot.PolyLine(data1, colour="red", width=1)
         line2 = plot.PolyLine(data2, colour="green", width=1)
-        line3 = plot.PolyLine(data3, colour="blue", width=1)
-        a = plot.utils.pairwise(tuple(data1))
+        line3 = plot.PolyMarker(data3, colour="blue", width=1,
+                                marker='circle', size=1)
+
+        #a = plot.utils.pairwise(tuple(data1))
         #gc = plot.PlotGraphics([line1, ], "test", "x", "y")
         #gc = plot.PlotGraphics([line1, line2, line3], "test", "x", "y")
         #gc = plot.PlotGraphics([line2, line1, line3], "test", "x", "y")
@@ -206,11 +215,13 @@ class MyFrame(wx.Frame):
         draw.Draw(gc)
         return draw
 
-    def test2_draw(self):
-        pass
-
-    def _frame_res(self, pnl, hb3_text6_box, box_v):
-        return pnl, hb3_text6_box, box_v
+    def test2_draw(self, pnl):
+        draw = plot.PlotCanvas(pnl)
+        data1 = ParaEMD().bbb()
+        ab = plot.PolyLine(data1, colour="red",  drawstyle="line")
+        gc = plot.PlotGraphics([ab,], "test", "x", "y")
+        draw.Draw(gc)
+        return draw
 
     def on_move(self, e):
         x, y = e.GetPosition()
