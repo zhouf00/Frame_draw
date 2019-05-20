@@ -9,13 +9,11 @@ file_path = os.path.join(os.getcwd(), "风机采集信号数据\\1K")
 def test_numpy():
     file_list = os.listdir(file_path)
     file_list = [var for var in file_list if var.split(".")[1] == "csv"]
-    data1, data2, data3 = [], [], []
     a = []
     for var in file_list:
         tmp = os.path.join(file_path, var)
         rd_file = np.loadtxt(tmp, delimiter=",",usecols=(0,1))
         a.append(rd_file)
-    print(a[0])
     return a[0], a[1], a[2]
 
 
