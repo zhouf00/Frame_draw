@@ -31,7 +31,7 @@ class Plot_Pnl(wxpnl):
         tmp_data = []
         res_list = []
         for i in range(len(args)):
-            tmp_data.append(plot.PolyLine(args[i], colour=self.colour_list[i], width=1))
+            tmp_data.append(plot.PolyLine(args[i], colour=self.colour_list[i], width=1, legend="abc"))
         for i in range(len(tmp_data)):
             res_list.append(tmp_data[num[i]])
         gc = plot.PlotGraphics(res_list, u"新图", "x", "y")

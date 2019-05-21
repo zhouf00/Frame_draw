@@ -21,7 +21,7 @@ class ParaEMD(object):
         data1 = np.random.rand(2,2)
         return data1
 
-    def test_numpy(self):
+    def LoadData(self, *args):
         file_path = os.path.join(os.getcwd(), "风机采集信号数据\\1K")
         file_list = os.listdir(file_path)
         file_list = [var for var in file_list if var.split(".")[1] == "csv"]
