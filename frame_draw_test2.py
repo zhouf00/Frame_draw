@@ -1,233 +1,386 @@
+import os
 import wx
-from threading import Thread
 from wx import adv
-from wx.lib import plot
-from Matplotlib_test2 import *
-from test_data import *
-from EMD_API import ParaEMD
+from wx import grid
+from zfdb import *
+
+
 
 class MyFrame(wx.Frame):
 
+    # 初始化常量
+    __MY_WINDOW = (600, 450)
+    __MY_TITLE = "数据库操作"
+    __SER_PATH =  ""
+
+    # 初始化变量
+    __ser_list = []
+    __ser_name = ""
+    __con_list = []
+    __db_list = []
+    __db_name = ""
+    __tab_list = []
+    __tab_name = ""
+
     def __init__(self, *args, **kw):
-        super(MyFrame, self).__init__(*args, **kw)
-        self.SetSize((800, 650))
-        self.SetTitle("风机采集图形化v1")
-
-        # 面板设计
-        self._init_frame()
-
-        # 事件绑定
-        self._func_event()
-
+        super(MyFrame, self).__init__(*args, *kw)
+        self.SetTitle(self.__MY_TITLE)
+        self.SetSize(self.__MY_WINDOW)
         self.Center()
+
+        self.pnl = wx.Panel(self)
+        self.v_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.h01_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.h02_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        # 第一层服务器配置文件选择
+        self.__ser_list = self.__show_ser_list()
+        print(self.__ser_list)
+        self.h01_text = wx.StaticText(self.pnl, label="服务器选择")
+        self.h01_sizer.Add(self.h01_text, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        self.h01_box = wx.BoxSizer()
+        self.h01_box_choice = wx.Choice(self.pnl, choices=self.__ser_list)
+        self.h01_box_choice.SetSelection(0)
+        self.__ser_name = self.h01_box_choice.GetStringSelection()
+        self.h01_box.Add(self.h01_box_choice, 1, wx.EXPAND, 5)
+        self.h01_sizer.Add(self.h01_box, 1, wx.EXPAND | wx.ALL, 5)
+        self.h01_button = wx.Button(self.pnl, label="连接")
+        self.h01_sizer.Add(self.h01_button, 0, wx.EXPAND | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+
+        # 第二层左边列表添加
+        self.h02_left = wx.BoxSizer(wx.VERTICAL)
+        self.h02_left_list = wx.ListBox(self.pnl, -1, choices=self.__db_list, style=wx.LB_SINGLE)
+        self.h02_left.Add(self.h02_left_list, 1, wx.EXPAND | wx.ALL, 5)
+        self.h02_sizer.Add(self.h02_left, 0, wx.EXPAND | wx.ALL, 5)
+
+        # 第二层右边列表添加
+        self.h02_right = wx.BoxSizer(wx.VERTICAL)
+        self.h02_right_list = wx.ListBox(self.pnl, choices=self.__tab_list, style=wx.LB_SINGLE)
+        self.h02_right.Add(self.h02_right_list, 1, wx.EXPAND | wx.ALL, 5)
+        self.h02_sizer.Add(self.h02_right, 1, wx.EXPAND | wx.ALL, 5)
+
+        # 添加各模块到竖向布局
+        self.v_sizer.Add(self.h01_sizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.v_sizer.Add(self.h02_sizer, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.pnl.SetSizer(self.v_sizer)
+
+        # 文件菜单
+        self.menu = wx.Menu()
+        self.add_menu = self.menu.Append(wx.ID_ANY, "新增服务器", "")
+        self.menu.AppendSeparator()
+        self.menu_bar = wx.MenuBar()
+        self.menu_bar.Append(self.menu, "文件")
+        self.SetMenuBar(self.menu_bar)
+        self.CreateStatusBar()
         self.Show()
 
-    def _init_frame(self):
-        # 设置面板各个功能
-        pnl = wx.Panel(self)
-        vb = wx.BoxSizer(wx.VERTICAL)
-        hb1 = wx.BoxSizer(wx.HORIZONTAL)
-        hb2 = wx.BoxSizer(wx.HORIZONTAL)
-        hb3 = wx.BoxSizer(wx.HORIZONTAL)
-        hb3_v1 = wx.BoxSizer(wx.VERTICAL)
-        hb3_v2 = wx.BoxSizer(wx.VERTICAL)
+        # 事件绑定
+        self.Bind(wx.EVT_CHOICE, self.__h01_cho_event, self.h01_box_choice)
+        self.Bind(wx.EVT_BUTTON, self.__h01_but_event, self.h01_button)
+        self.Bind(wx.EVT_MENU, self.__add_menu_event, self.add_menu)
 
-        ######################################
-        # 第一层 配置文件
-        ######################################
-        text1 = wx.StaticText(pnl, wx.ID_ANY, u"风场")
-        self.hb1_listc2 = wx.Choice(pnl, choices=ParaEMD().FengChang)
-        self.hb1_listc2.SetSelection(0)
-        text3 = wx.StaticText(pnl, wx.ID_ANY, u"风机")
-        self.hb1_textc4 = wx.TextCtrl(pnl)
-        text5 = wx.StaticText(pnl, wx.ID_ANY, u"叶片ID")
-        self.hb1_listc6 = wx.Choice(pnl, choices=ParaEMD().IdBlade)
-        self.hb1_listc6.SetSelection(0)
-        text7 = wx.StaticText(pnl, wx.ID_ANY, u"信号类型")
-        self.hb1_listc8 = wx.Choice(pnl, choices=ParaEMD().TypeData)
-        self.hb1_listc8.    SetSelection(0)
+    def __show_ser_list(self):
+        self.file_path = os.path.join(os.getcwd(), ".server")
+        if not os.path.exists(self.file_path):
+            os.mkdir(self.file_path)
+        return os.listdir(self.file_path)
 
-        hb1.AddMany([(text1,  0, wx.ALIGN_CENTER | wx.ALL, 10),
-                     (self.hb1_listc2, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (text3, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (self.hb1_textc4, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (text5, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (self.hb1_listc6, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (text7, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (self.hb1_listc8, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     ])
+    def __h01_cho_event(self, e):
+        self.__ser_name = self.h01_box_choice.GetStringSelection()
 
-        ######################################
-        # 第二层 时间
-        ######################################
-        text9 = wx.StaticText(pnl, wx.ID_ANY, u"起始:")
-        self.hb2_time10 = adv.DatePickerCtrl(pnl, wx.ID_ANY, wx.DefaultDateTime,
-                                            wx.DefaultPosition, wx.DefaultSize, adv.DP_DEFAULT)
-        text11 = wx.StaticText(pnl, wx.ID_ANY, u"结束：")
-        self.hb2_time12 = adv.DatePickerCtrl(pnl, wx.ID_ANY, wx.DefaultDateTime,
-                                                    wx.DefaultPosition, wx.DefaultSize, adv.DP_DEFAULT)
-        self.hb2_button13 = wx.Button(pnl, label=u"运行")
+    def __h01_but_event(self, e):
+        try:
+            con_name = os.path.join(self.file_path, self.__ser_name)
+            f = open(con_name, "r")
+            self.__con_list = f.readline().split(",")
+            self.__mysql = MySql(self.__con_list)
+            self.__db_list = self.tup2list(self.__mysql.show_db())
+            print(self.__db_list)
+            self.h02_left.Clear(True)
+            #self.h02_left_list = wx.ListBox(self.pnl, choices=self.__db_list, style=wx.LB_SINGLE)
+            #self.h02_left.Add(self.h02_left_list, 1, wx.EXPAND | wx.ALL, 5)
+            self.h02_left.Layout()
 
-        hb2.AddMany([(text9, 0, wx.ALIGN_CENTER | wx.ALL, 10),
-                     (self.hb2_time10, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (text11, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (self.hb2_time12, 0, wx.ALIGN_CENTER | wx.ALL, 5),
-                     (self.hb2_button13, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                                          ])
+            # 事件绑定
+            self.Bind(wx.EVT_LISTBOX, self.__h02_left_event, self.h02_left_list)
 
-        ######################################
-        # 第三层左侧 配置文件
-        ######################################
-        self.hb3_v_box1 = wx.RadioBox(pnl, label=u"IMF分量",
-                                        choices=ParaEMD().LblList, majorDimension = 3, style = wx.RA_SPECIFY_ROWS)
-        hb3_text2 = wx.StaticBoxSizer(wx.StaticBox(pnl, 0, label=u"显示优先级"), wx.VERTICAL)
-        self.hb3_v_ch3 = wx.Choice(pnl, choices=ParaEMD().LblListLcn)
-        self.hb3_v_ch3.SetSelection(0)
-        self.hb3_v_ch4 = wx.Choice(pnl, choices=ParaEMD().LblListLcn)
-        self.hb3_v_ch4.SetSelection(1)
-        self.hb3_v_ch5 = wx.Choice(pnl, choices=ParaEMD().LblListLcn)
-        self.hb3_v_ch5.SetSelection(2)
-        hb3_text6 = wx.StaticBoxSizer(wx.StaticBox(pnl, 0, label=u"时间选择"), wx.VERTICAL)
-        self.hb3_v_ch7 = wx.Choice(pnl, choices=[])
-        #self.hb3_v_ch7 = wx.ListBox(pnl, choices=[], style=wx.LB_SINGLE)
-        hb3_text8 = wx.StaticBoxSizer(wx.StaticBox(pnl, 0, label=u"浮值选择"),wx.HORIZONTAL)
-        self.hb3_v_lc9 = wx.TextCtrl(pnl, size=(50, 25), value="100")
-        hb3_text8_line = wx.StaticText(pnl, label=u"----")
-        self.hb3_v_lc11 = wx.TextCtrl(pnl,  size=(50, 25), value="400")
-        self.hb3_v_button6 = wx.Button(pnl, label=u"显示")
+        except Exception as eve:
+            wx.MessageBox("输入有误", "错误", wx.OK | wx.ICON_INFORMATION)
 
-        hb3_text2.AddMany([(self.hb3_v_ch3, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           (self.hb3_v_ch4, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           (self.hb3_v_ch5, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           ])
-        hb3_text6.AddMany([(self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           ])
-        hb3_text8.AddMany([(self.hb3_v_lc9, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           (hb3_text8_line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           (self.hb3_v_lc11, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           ])
+    def __h02_left_event(self, e):
+        index = e.GetEventObject().GetSelection()
+        print(index)
+        self.__db_name = self.__db_list[index]
+        self.__tab_list = self.tup2list(self.__mysql.show_tab(self.__db_name))
+        self.h02_right.Clear(True)
+        self.h02_right_list = wx.ListBox(self.pnl, choices=self.__tab_list, style=wx.LB_SINGLE)
+        self.h02_right.Add(self.h02_right_list, 1, wx.EXPAND | wx.ALL, 5)
+        self.h02_right.Layout()
 
-        hb3_v1.AddMany([(self.hb3_v_box1, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                        (hb3_text2, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                        (hb3_text6, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                        (hb3_text8, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                        (self.hb3_v_button6, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                           ])
-        ######################################
-        # 第三层右侧 配置文件
-        ######################################
-        hb3_v_draw1 = self.test_draw(pnl)
-        hb3_v_draw2 = self.test2_draw(pnl)
-        hb3_v2.AddMany([(hb3_v_draw1, 2, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                        (hb3_v_draw2, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                        ])
-        ######################################
-        # 所有面板汇合
-        ######################################
-        h1_line = wx.StaticLine(pnl, wx.ID_ANY)
-        h2_line = wx.StaticLine(pnl,wx.ID_ANY, style=wx.LI_VERTICAL)
-        hb3.AddMany([(hb3_v1, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                     (h2_line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                     (hb3_v2, 3, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),])
-        vb.AddMany([(hb1, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                    (hb2, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                    (h1_line, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                    (hb3, 1, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5),
-                    ])
-        pnl.SetSizer(vb)
-        self.CreateStatusBar()
+        # 双击事件绑定
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.__h02_right_event, self.h02_right_list)
 
-        #　传面板参数
-        self.res = [pnl, hb3_text6, hb3_v1]
+    def __h02_right_event(self, e):
+        index = e.GetEventObject().GetSelection()
+        self.__tab_name = self.__tab_list[index]
+        tmp_list = self.__con_list
+        tmp_list[4] = self.__db_name
+        diglog = MyDialog1(tmp_list, self.__tab_name,self)
+        diglog.ShowModal()
 
-    def _func_event(self):
-        self.Bind(wx.EVT_MOVE, self.on_move)
-        self.hb2_button13.Bind(wx.EVT_BUTTON, self._start_event)
-        self.hb3_v_button6.Bind(wx.EVT_BUTTON, self._show_event)
+    def __add_menu_event(self, e):
+        dialog = MyDialog2(self.file_path,self)
+        dialog.ShowModal()
+        new_list = os.listdir(self.file_path)
+        self.h01_box.Clear(True)
+        new_choice = wx.Choice(self.pnl, choices=new_list)
+        self.h01_box.Add(new_choice, 1, wx.EXPAND, 5)
+        self.h01_box.Layout()
 
-    def _start_event(self, e):
-        wind_f = self.hb1_listc2.GetStringSelection()
-        wind_m = self.hb1_textc4.GetValue()
-        wind_b = self.hb1_listc6.GetStringSelection()
-        signal_t = self.hb1_listc8.GetStringSelection()
-        begin = self.hb2_time10.GetValue()
-        begin_t = "%s/%s/%s"%(begin.year, str(int(begin.month)+1), begin.day)
-        end = self.hb2_time12.GetValue()
-        end_t = "%s/%s/%s"%(end.year, str(int(end.month)+1), end.day)
-        #self._start_func(wind_f, wind_m, wind_b, signal_t, begin_t, end_t)
-        _start_thread = Thread(target=self._start_func,
-                               args=(wind_f, wind_m, wind_b, signal_t, begin_t, end_t,))
-        _start_thread.start()
-        a = ParaEMD().aaa()
+    def tup2list(self, in_tup):
+        re_list = []
+        for var in in_tup:
+            re_list.append("".join(tuple(var)))
+        return re_list
 
-        self.res[1].Clear(True)
-        self.hb3_v_ch7 = wx.Choice(self.res[0], choices=a)
-        self.res[1].Add(self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
-        self.res[1].Layout()
 
-    def _show_event(self, e):
-        a = self.hb3_v_box1.GetSelection()
-        fl_list1 = ParaEMD().LblList[a]
-        data_list_all =[]
-        data_list_all.append(self.hb3_v_ch3.GetStringSelection())
-        data_list_all.append(self.hb3_v_ch4.GetStringSelection())
-        data_list_all.append(self.hb3_v_ch5.GetStringSelection())
-        time_list1 = self.hb3_v_ch7.GetStringSelection()
-        self._show_func(fl_list1, data_list_all, time_list1)
+class MyDialog1(wx.Dialog):
 
-    def _start_func(self, *args):
+    __con_list = []
+    __tab_name = ""
+    __start_row = 0
+    __end_row = 0
+    __sum_row = 0
+
+    # 初始化常量
+    __TRUE_COL = 10
+    __TRUE_ROW = 25
+    __COL_VAL = 75
+    __ROW_VAL = 25
+    __BOU_VAL = 100
+    __BOT_VAL = 100
+    __MAX_ROW = 1000
+
+    def __init__(self, con_list, tab_name, *args, **kw):
+        super(MyDialog1, self).__init__(*args, **kw)
+        self.__con_list = con_list
+        self.__tab_name = tab_name
+
+        self.SetTitle("库名：%s<表名：%s>"%(self.__con_list[4],self.__tab_name))
+        self.ms = MySql(self.__con_list)
+        self.tab_data = self.ms.FindAll(self.__tab_name)
+        self.headline = self.ms.show_headline(self.__tab_name)
+        self.m_cols = len(self.tab_data[0])-1
+        self.m_rows = len(self.tab_data)
+
+        self.SetSize(self.true_size())
+
+        # 添加布局
+        self.SetSizeHints(wx.DefaultSize, wx.DefaultSize)
+        self.gv_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.gh01_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.gh03_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.gh04_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        ################################################
+        # 翻页按键
+        ################################################
+        self.gh01_button1 = wx.Button(self, wx.ID_ANY, "显示数据")
+        self.gh01_sizer.Add(self.gh01_button1,0, wx.EXPAND | wx.ALL, 5)
+        self.gh01_sizer.AddStretchSpacer(1)
         """
-        引入外部函数，传入参数
-        :param args: 风场、风机、叶片、信号、开始时间、结束时间
-        :return:
+        self.gh01_button2 = wx.Button(self, label="上一页")
+        self.gh01_sizer.Add(self.gh01_button2, 0, wx.ALIGN_LEFT | wx.ALL, 5)
+        self.gh01_button3 = wx.Button(self, label="下一页")
+        self.gh01_sizer.Add(self.gh01_button3, 0, wx.ALIGN_LEFT | wx.ALL, 5)
         """
-        location = args[0]
-        fan = args[1]
-        fanid = args[2]
-        typedata = args[3]
-        start_time = args[4]
-        end_time = args[5]
-        #ParaEMD().EMDTRS(location, fan, fanid, typedata, start_time, end_time)
+        self.gv_sizer.Add(self.gh01_sizer, 0, wx.EXPAND | wx.ALL, 5)
 
-    def _show_func(self, *args):
-        """
-        显示函数，外部函数实现，传入参数
-        :param args: IMF值， 优先级1、2、3
-        :return:
-        """
-        for var in args[1]:
-            print(var)
+        ################################################
+        # 删除操作（时间与按键）
+        ################################################
+        self.gh02_sizer = wx.StaticBoxSizer(wx.StaticBox(self, 0, label="删除操作"), wx.HORIZONTAL)
+
+        start_text_time = wx.StaticText(self, label="开始时间",style=wx.ALIGN_CENTER)
+        self.gh02_sizer.Add(start_text_time, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.start_time = adv.DatePickerCtrl(self, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize,
+                                             adv.DP_DEFAULT)
+        self.gh02_sizer.Add(self.start_time, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        end_text_time = wx.StaticText(self, label="结束时间", style=wx.ALIGN_CENTER)
+        self.gh02_sizer.Add(end_text_time, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.end_time = adv.DatePickerCtrl(self, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize,
+                                             adv.DP_DEFAULT)
+        self.gh02_sizer.Add(self.end_time, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.gh02_button = wx.Button(self, wx.ID_ANY, "删除")
+        self.gh02_sizer.Add(self.gh02_button, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        self.gv_sizer.Add(self.gh02_sizer, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.m_grid = self.create_grid(bool=False)
+        self.gh03_sizer.Add(self.m_grid, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
+        self.gv_sizer.Add(self.gh03_sizer, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
+
+        ################################################
+        # 布局汇合
+        ################################################
+        self.SetSizer(self.gv_sizer)
+        self.Layout()
+        self.Center(wx.BOTH)
+
+        # 事件绑定
+        self.Bind(wx.EVT_BUTTON, self.__show_grid, self.gh01_button1)
+        self.Bind(wx.EVT_BUTTON, self.__del_data, self.gh02_button)
+
+    def __show_grid(self, e):
+        self.gh03_sizer.Clear(True)
+        self.m_grid = self.create_grid()
+        self.gh03_sizer.Add(self.m_grid, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
+        self.gh03_sizer.Layout()
+
+    def __del_data(self, e):
+        start_time = self.start_time.GetValue().GetTicks() * 1000
+        end_time = self.end_time.GetValue().GetTicks() * 1000
+        try:
+            self.ms.time_del((self.__tab_name, self.headline[2], start_time,
+                              self.headline[2], end_time))
+        except Exception as event:
+            wx.MessageBox("数据不存在","错误", wx.OK | wx.ICON_INFORMATION)
+        else:
+            wx.MessageBox("数据删除成功","完成", wx.OK | wx.ICON_INFORMATION)
+
+    def __up_data(self, e):
         pass
 
-    def test_draw(self, pnl):
-        draw = plot.PlotCanvas(pnl)
-        data1, data2, data3 = test_numpy()
-        line1 = plot.PolyLine(data1, colour="red", width=1)
-        line2 = plot.PolyLine(data2, colour="green", width=1)
-        line3 = plot.PolyMarker(data3, colour="blue", width=1,
-                                marker='circle', size=1)
+    def __next_data(self, e):
+        pass
 
-        #a = plot.utils.pairwise(tuple(data1))
-        #gc = plot.PlotGraphics([line1, ], "test", "x", "y")
-        #gc = plot.PlotGraphics([line1, line2, line3], "test", "x", "y")
-        #gc = plot.PlotGraphics([line2, line1, line3], "test", "x", "y")
-        gc = plot.PlotGraphics([line3, line2, line1], "test", "x", "y")
-        draw.Draw(gc)
-        return draw
+    def create_grid(self, bool=True):
+        if self.__start_row == 0:
+            if self.m_rows < 1000:
+                self.__end_row = self.m_rows
+            else:
+                self.__end_row = self.__MAX_ROW
+        m_grid = wx.grid.Grid(self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0)
+        m_grid.CreateGrid(self.__end_row, self.m_cols)
+        col_name = self.headline
+        print("start:%s, end:%s"%(self.__start_row,self.__end_row))
+        print("col:%s"%len(self.tab_data[self.__start_row]))
+        if bool is True:
+            i = 0
+            for row in range(self.__start_row, self.__end_row):
+                m_grid.SetRowLabelValue(row, str(self.tab_data[row][0]))  # 确保序列号与数据库id保持一致
+                for col in range(1, len(self.tab_data[row])):
+                    m_grid.SetColLabelValue(col - 1, col_name[col])
+                    m_grid.SetCellValue(i, col - 1, str(self.tab_data[row][col]))
+                i += 1
+            self.__sum_row += self.__end_row
+            tmp = self.m_rows - self.__sum_row
+            if tmp > 1000:
+                self.__start_row += self.__MAX_ROW
+                self.__end_row += self.__MAX_ROW
+            elif tmp > 0 and tmp < 1000:
+                self.__start_row += tmp
+                self.__end_row += self.__MAX_ROW
+            self.gh03_sizer.Layout()
+        return m_grid
 
-    def test2_draw(self, pnl):
-        draw = plot.PlotCanvas(pnl)
-        data1 = ParaEMD().bbb()
-        ab = plot.PolyLine(data1, colour="red",  drawstyle="line")
-        gc = plot.PlotGraphics([ab,], "test", "x", "y")
-        draw.Draw(gc)
-        return draw
+    def true_size(self):
+        if self.m_cols > self.__TRUE_COL:
+            g_col = (self.__TRUE_COL + 1) * self.__COL_VAL + self.__BOU_VAL
+        elif self.m_cols < self.__TRUE_COL - 4:
+            g_col = (self.__TRUE_COL - 5) * self.__COL_VAL + self.__BOU_VAL
+        else:
+            g_col = (self.m_cols + 1) * self.__COL_VAL + self.__BOU_VAL
 
-    def on_move(self, e):
-        x, y = e.GetPosition()
+        if self.m_rows > self.__TRUE_ROW:
+            g_row = self.__BOT_VAL + (self.__TRUE_ROW + 1) * self.__ROW_VAL + self.__BOU_VAL
+        else:
+            g_row = self.__BOT_VAL + (self.m_rows + 1) * self.__ROW_VAL + self.__BOU_VAL
+        return g_col, g_row
 
+
+class MyDialog2(wx.Dialog):
+
+    con_list = []
+
+    def __init__(self, file_path, *args, **kw):
+        super(MyDialog2, self).__init__(*args, **kw)
+
+        self.__file_path = file_path
+
+        self.SetTitle("创建完成，请关闭程序，重新开启")
+        self.SetSize((400,450))
+
+        self.pnl = wx.Panel(self)
+        self.gSizer = wx.BoxSizer(wx.VERTICAL)
+        self.gSizer1 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.ip = wx.TextCtrl(self.pnl, size=(210, 25))
+        self.port = wx.TextCtrl(self.pnl, size=(210, 25))
+        self.port.SetValue("3306")
+        self.user = wx.TextCtrl(self.pnl, size=(210, 25))
+        self.pwd = wx.TextCtrl(self.pnl, size=(210, 25))
+        self.name = wx.TextCtrl(self.pnl, size=(210, 25))
+        self.add_affirm = wx.Button(self.pnl, label="添加", size=(80, 25))
+        # 为添加按钮组件绑定事件处理
+        self.add_affirm.Bind(wx.EVT_BUTTON, self.addaffirm)
+        #################################################################################
+        # 创建静态框
+        ser_ip = wx.StaticBox(self.pnl, label="服务器IP")
+        ser_port = wx.StaticBox(self.pnl, label="服务器端口")
+        ser_user = wx.StaticBox(self.pnl, label="服务器用户名")
+        ser_pwd = wx.StaticBox(self.pnl, label="密码")
+        ser_name = wx.StaticBox(self.pnl, label="保存名字")
+        # 创建水平方向box布局管理器
+        hsbox_ip = wx.StaticBoxSizer(ser_ip, wx.HORIZONTAL)
+        hsbox_port = wx.StaticBoxSizer(ser_port, wx.HORIZONTAL)
+        hsbox_user = wx.StaticBoxSizer(ser_user, wx.HORIZONTAL)
+        hsbox_pwd = wx.StaticBoxSizer(ser_pwd, wx.HORIZONTAL)
+        hsbox_name = wx.StaticBoxSizer(ser_name, wx.HORIZONTAL)
+        # 添加到hsbox布局管理器
+        hsbox_ip.Add(self.ip, 0, wx.EXPAND | wx.BOTTOM, 5)
+        hsbox_port.Add(self.port, 0, wx.EXPAND | wx.BOTTOM, 5)
+        hsbox_user.Add(self.user, 0, wx.EXPAND | wx.BOTTOM, 5)
+        hsbox_pwd.Add(self.pwd, 0, wx.EXPAND | wx.BOTTOM, 5)
+        hsbox_name.Add(self.name, 0, wx.EXPAND | wx.BOTTOM, 5)
+
+        self.gSizer.Add(hsbox_ip, 0, wx.CENTER | wx.ALL, 5)
+        self.gSizer.Add(hsbox_port, 0, wx.CENTER  | wx.ALL, 5)
+        self.gSizer.Add(hsbox_user, 0, wx.CENTER | wx.ALL, 5)
+        self.gSizer.Add(hsbox_pwd, 0, wx.CENTER  | wx.ALL, 5)
+        self.gSizer.Add(hsbox_name, 0, wx.CENTER | wx.ALL, 5)
+        self.gSizer.Add(self.add_affirm, 0, wx.CENTER | wx.ALL, 5)
+
+        self.pnl.SetSizer(self.gSizer)
+
+    def addaffirm(self, e):
+        self.con_list.clear()
+        self.con_list.append(self.ip.GetValue())
+        self.con_list.append(self.port.GetValue())
+        self.con_list.append(self.user.GetValue())
+        self.con_list.append(self.pwd.GetValue())
+        # db 为空
+        self.con_list.append("-")
+        ser_name = os.path.join(self.__file_path,self.name.GetValue())
+        try:
+            if len(ser_name) > 0:
+                if not os.path.isfile(ser_name):
+                    f = open(ser_name, "w")
+                    f.writelines(','.join(self.con_list))
+                    f.close()
+        except Exception:
+            wx.MessageBox("输入有误", "错误", wx.OK | wx.ICON_INFORMATION)
+        else:
+            wx.MessageBox("保存成功", "成功", wx.OK | wx.ICON_INFORMATION)
+            self.Close()
 
 if __name__ == '__main__':
     app = wx.App()
     win = MyFrame(None)
     app.MainLoop()
+
