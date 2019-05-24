@@ -1,9 +1,8 @@
 import wx
-from threading import Thread
 from wx import adv
 from wx.lib import plot
-from Matplotlib_test2 import *
-from test_data import *
+from v1图形.Matplotlib_test2 import *
+from v1图形.test_data import *
 
 
 class MyFrame(wx.Frame):

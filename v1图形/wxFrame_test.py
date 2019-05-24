@@ -1,5 +1,5 @@
 import wx
-from wxplot_test1 import Plot_Pnl
+from v1图形.wxplot_test1 import Plot_Pnl
 from EMD_API import ParaEMD
 from random import sample
 

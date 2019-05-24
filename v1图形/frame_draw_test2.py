@@ -2,7 +2,7 @@ import wx
 from threading import Thread
 from wx import adv
 from EMD_API import ParaEMD
-from wxplot_test1 import Plot_Pnl
+from v1图形.wxplot_test1 import Plot_Pnl  #
 
 class MyFrame(wx.Frame):
 
@@ -140,7 +140,7 @@ class MyFrame(wx.Frame):
         self.right = [pnl, hb3_v2]
 
     def _func_event(self):
-        self.Bind(wx.EVT_MOVE, self.on_move)
+        #self.Bind(wx.EVT_MOVE, self.on_move)
         self.hb2_button13.Bind(wx.EVT_BUTTON, self._start_event)
         self.hb3_v_button6.Bind(wx.EVT_BUTTON, self._show_event)
 
@@ -157,9 +157,8 @@ class MyFrame(wx.Frame):
         start_thread = Thread(target=self._start_func,
                                args=(wind_f, wind_m, wind_b, signal_t, begin_t, end_t,))
         start_thread.start()
-
         self.left[1].Clear(True)
-        self.hb3_v_ch7 = wx.Choice(self.left[0], choices=ParaEMD().Timelist)
+        self.hb3_v_ch7 = wx.Choice(self.left[0], choices=ParaEMD().aaa())
         self.left[1].Add(self.hb3_v_ch7, 0, wx.EXPAND | wx.ALIGN_CENTER | wx.ALL, 5)
         self.left[1].Layout()
 
@@ -167,6 +166,7 @@ class MyFrame(wx.Frame):
         fl_list1 = self.hb3_v_box1.GetSelection()
         data_list_all =[]
         float_value =[]
+        
         data_list_all.append(self.hb3_v_ch3.GetSelection())
         data_list_all.append(self.hb3_v_ch4.GetSelection())
         data_list_all.append(self.hb3_v_ch5.GetSelection())
@@ -188,7 +188,8 @@ class MyFrame(wx.Frame):
         typedata = args[3]
         start_time = args[4]
         end_time = args[5]
-        #ParaEMD().EMDTRS(location, fan, fanid, typedata, start_time, end_time)
+        ParaEMD().EMDTRS(location, fan, fanid, typedata, start_time, end_time)
+        ParaEMD().EMDTRS()
 
     def _show_func(self, *args):
         """
@@ -211,10 +212,6 @@ class MyFrame(wx.Frame):
 
     def test1_draw(self, args, pri_val):
         self.hb3_v_draw1._draw_new(args, pri_val)
-
-    def on_move(self, e):
-        x, y = e.GetPosition()
-
 
 
 if __name__ == '__main__':
