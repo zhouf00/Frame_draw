@@ -4,12 +4,13 @@ import tushare as ts
 import numpy as np
 
 data = ts.get_hist_data("sh", start="2018-4-20", end="2019-5-20").sort_index()
-print(data)
+print(data.index)
 xdict = dict(enumerate(data.index))
 
 axis_1 = [(i, list(data.index)[i]) for i in range(0, len(data.index),5)]
 
-
+print(axis_1)
+print(xdict.items())
 
 # 首先实例化一个QT实例：
 app = pg.QtGui.QApplication([])
@@ -56,7 +57,6 @@ def mouseMoved(evt):
         mousePoint = vb.mapSceneToView(pos)
         index = int(mousePoint.x())
         pos_y = int(mousePoint.y())
-        print(index)
         if 0 < index < len(data.index):
             print(xdict[index], data['open'][index], data['close'][index])
             label.setHtml(
@@ -65,6 +65,7 @@ def mouseMoved(evt):
             label.setPos(mousePoint.x(), mousePoint.y())
         vLine.setPos(mousePoint.x())
         hLine.setPos(mousePoint.y())
+        print((index, pos_y))
 
 proxy = pg.SignalProxy(plot.scene().sigMouseMoved, rateLimit=60, slot=mouseMoved)
 

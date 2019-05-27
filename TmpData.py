@@ -35,10 +35,31 @@ def read_pandas():
 
     pd_file = pd.read_csv(file_name)
     df = pd.DataFrame(pd_file)
+
     for i in range(df.shape[1]):
-        print(df.iloc[:,i])
-    #print(list(df["1x"]))
-    print("data",df.index)
+        pass
+        #print(df.iloc[:,i])
+    xdict = dict(enumerate(df.aa))
+    bb = df.iloc[:, 0][64901].astype(str)
+    abc = "<p style='color:white'>日期：{0}</p>" \
+          "<p style='color:white'>开盘：{1}</p>" \
+          "<p style='color:white'>收盘：{2}</p>" \
+          "<p style='color:white'>收盘：{3}</p>".format(df.iloc[:, 0][100].astype(str),
+            df.iloc[:, 1][100].astype(str),
+            df.iloc[:, 2][100].astype(str),
+            df.iloc[:, 3][100].astype(str))
+    print(type(bb))
+    print(abc)
+
+def test():
+    self.label.setHtml("<p style='color:white'>日期：{0}</p>\
+                                                <p style='color:white'>开盘：{1}</p>\
+                                                <p style='color:white'>收盘：{2}</p>\
+                                               <p style='color:white'>收盘：{3}</p>"
+                       .format(self.data.iloc[:, 0][index].astype(str),
+                               self.data.iloc[:, 1][index].astype(str),
+                               self.data.iloc[:, 2][index].astype(str),
+                               self.data.iloc[:, 3][index].astype(str)))
 
 if __name__ == '__main__':
     #_wind_mach_chooice("风场1")
