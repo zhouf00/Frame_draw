@@ -1,7 +1,9 @@
 import os
 import numpy as np
+import pandas as pd
 
-file_path = os.path.join(os.getcwd(), "风机采集信号数据\\1K")
+file_path = os.path.join(os.getcwd(), "data\\1K")
+file_name = os.path.join(file_path, "1K_FFT1.csv")
 
 wind_field = ["风场1", "风场2", "风场3"]
 wind_machine = {"风场1":["大别山", "天目山"],
@@ -25,7 +27,19 @@ def _read_data():
         a.append(rd_file)
     return a[0], a[1], a[2]
 
+def tmp_file():
+    return file_name
+
+def read_pandas():
+    #file_name = os.path.join(file_path, "1K_FFT1.csv")
+
+    pd_file = pd.read_csv(file_name)
+    df = pd.DataFrame(pd_file)
+    for i in range(df.shape[1]):
+        print(df.iloc[:,i])
+    #print(list(df["1x"]))
+    print("data",df.index)
 
 if __name__ == '__main__':
     #_wind_mach_chooice("风场1")
-    print(file_path)
+    read_pandas()

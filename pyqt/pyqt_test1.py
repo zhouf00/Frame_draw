@@ -23,6 +23,8 @@ stringaxis.setTicks([axis_1,xdict.items()])
 
 # 在窗口中添加一个空的图形，通过axisItems参数指定坐标轴及其内容，并使用title参数设置了图形的标题：
 plot = win.addPlot(axisItems={'bottom': stringaxis}, title='上证指数 - zmister.com绘制')
+N = 200
+plot.setRange(xRange=[0, N-1], yRange=[0, 3500], padding=0 )
 
 # 在图形中添加一个文本：
 label = pg.TextItem()

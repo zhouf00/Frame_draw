@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout,
                              QRadioButton, QGroupBox,QCheckBox,QLineEdit, QAction)
 from PyQt5.QtCore import Qt, QDate, QRect
 from Mythreading import *
-from pyqt5_graph import Graph_Func
+#from pyqt5_graph import Graph_Func
+from pyqt5_graph2 import Graph_Func
 from EMD_API import ParaEMD
 
 
@@ -217,8 +218,8 @@ class Qt_Test_Frame(QMainWindow):
 
     def _fouth_right(self):
         # 加载波形图
-        self.tmp_plt = self.graph.plt_init()
-        self.v5_wlayout.addWidget(self.tmp_plt)
+        #self.tmp_plt = self.graph.plt_init()
+        self.v5_wlayout.addWidget(self.graph)
 
     def _my_line(self, var=True):
         # var 为True时，为横线，否则为竖线
@@ -303,12 +304,13 @@ class Qt_Test_Frame(QMainWindow):
         d = self.h1_combox3.currentText()
 
         # 在下面函数传入数据列表
-        self.graph.data_to_dict()
+        #self.graph.data_to_dict()
 
         # 下面为画图操作，无不用修改
-        self.v5_wlayout.removeWidget(self.tmp_plt)
-        self.tmp_plt = self.graph.plt_show(b)
-        self.v5_wlayout.addWidget(self.tmp_plt)
+        #self.v5_wlayout.removeWidget(self.graph)
+        #self.tmp_plt = self.graph.plt_show(b)
+        #self.v5_wlayout.addWidget(self.tmp_plt)
+        self.graph.plt_show(b)
         print("*****显示打印*****")
 
 
