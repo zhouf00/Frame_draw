@@ -42,6 +42,7 @@ class Graph_Func(QWidget):
                                         rateLimit=60, slot=self.mouse_moved)
         self.main_layout.addWidget(self.plt)
 
+
     def mouse_moved(self, event=None):
         if event is None:
             print("事件为空")
