@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout,
 from PyQt5.QtCore import Qt, QDate, QRect
 from Mythreading import *
 #from pyqt5_graph import Graph_Func
-from pyqt5_graph2 import Graph_Func
+from pyqt5_graph import Graph_Func
 from EMD_API import ParaEMD
 
 
