@@ -10,8 +10,6 @@ class Graph_Func(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.data = pd.DataFrame(pd.read_csv(tmp_file()))
-
         self.main_layout = QVBoxLayout()
         self.plt = pg.PlotWidget()
         self.plt.addLegend(size=(150, 80))
@@ -20,9 +18,11 @@ class Graph_Func(QWidget):
 
         self.setLayout(self.main_layout)
 
+    def set_data(self, file_name):
+        self.data = pd.DataFrame(pd.read_csv(file_name))
+
     def plt_show(self, num):
         self.main_layout.removeWidget(self.plt)
-
         self.plt = pg.PlotWidget()
         self.plt.addLegend(size=(150, 80))
         self.plt.showGrid(x=True, y=True, alpha=0.5)
@@ -61,19 +61,18 @@ class Graph_Func(QWidget):
                 if self.plt.sceneBoundingRect().contains(pos):
                     mousePoint = self.plt.plotItem.vb.mapSceneToView(pos)
                     index = int(mousePoint.x())
-                    print("坐标：", (index, mousePoint.y()), "值：", (self.data.iloc[:, 0][index]))
+                    print(event)
+                    print("坐标：", (index, mousePoint.y()), "值：",(self.data.iloc[:, 0][index]))
                     if 0 < index < len(self.data):
                         self.label.setHtml("<p style='color:white'>频率：{0}</p>\
-                                              <p style='color:white'>1x：{1}</p>\
-                                              <p style='color:white'>2x：{2}</p>\
-                                              <p style='color:white'>3x：{3}</p>"
+                                            <p style='color:white'>1x：{1}</p>\
+                                            <p style='color:white'>2x：{2}</p>\
+                                            <p style='color:white'>3x：{3}</p>"
                                            .format(self.data.iloc[:, 0][index].astype(str),
                                                    self.data.iloc[:, 1][index].astype(str),
                                                    self.data.iloc[:, 2][index].astype(str),
                                                    self.data.iloc[:, 3][index].astype(str)))
                         self.label.setPos(mousePoint.x(), mousePoint.y())
-                    self.move_slot = pg.SignalProxy(self.plt.sceneObj.sigMouseClicked,
-                                                    rateLimit=60, slot=self.mouse_moved)
                     self.vLine.setPos(mousePoint.x())
                     self.hLine.setPos(mousePoint.y())
             except Exception as e:

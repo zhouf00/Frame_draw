@@ -1,5 +1,6 @@
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QWidget, QVBoxLayout
+from PyQt5.QtCore import Qt
 from TmpData import _read_data, tmp_file
 import pandas as pd
 
@@ -10,15 +11,15 @@ class Graph_Func(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.data = pd.DataFrame(pd.read_csv(tmp_file()))
-
         self.main_layout = QVBoxLayout()
         self.plt = pg.PlotWidget()
         self.plt.addLegend(size=(150, 80))
         self.plt.showGrid(x=True, y=True, alpha=0.5)
         self.main_layout.addWidget(self.plt)
-
         self.setLayout(self.main_layout)
+
+    def set_data(self, file_name):
+        self.data = pd.DataFrame(pd.read_csv(file_name))
 
     def plt_show(self, num):
         self.main_layout.removeWidget(self.plt)
@@ -26,17 +27,9 @@ class Graph_Func(QWidget):
         self.plt = pg.PlotWidget()
         self.plt.addLegend(size=(150, 80))
         self.plt.showGrid(x=True, y=True, alpha=0.5)
-        xdict = dict(enumerate(self.data["aa"].astype(str)))
-        axis_1 = [(i, self.data["aa"][i].tolist()) for i in range(0, len(self.data["aa"]),500)]
-        stringaxis = pg.AxisItem(orientation="bottom")
-        stringaxis.setTicks([axis_1, xdict.items()])
-        #self.plt.getAxis("bottom").setTicks([axis_1, xdict.items()])
-        #x_max = self.data.iloc[:,0].max()
-        #self.plt.setRange(xRange=[0, x_max], yRange=[0, 0.01], padding=0)
-        #self.plt.setXRange(max=1000, min=0, padding=0)
+
         for i in num.split(","):
             i = int(i)
-            print(i)
             self.plt.plot(x=self.data.index.tolist(), y=list(self.data.iloc[:,i]), pen=colour[i-1],
                      name=yp_list[i-1])
 
@@ -61,16 +54,10 @@ class Graph_Func(QWidget):
                 if self.plt.sceneBoundingRect().contains(pos):
                     mousePoint = self.plt.plotItem.vb.mapSceneToView(pos)
                     index = int(mousePoint.x())
-                    print("坐标：", (index, mousePoint.y()), "值：",(self.data.iloc[:, 0][index]))
+                    #print("坐标：", (index, mousePoint.y()), "值：",(self.data.iloc[:, 0][index]))
                     if 0 < index < len(self.data):
-                        self.label.setHtml("<p style='color:white'>频率：{0}</p>\
-                                            <p style='color:white'>1x：{1}</p>\
-                                            <p style='color:white'>2x：{2}</p>\
-                                            <p style='color:white'>3x：{3}</p>"
-                                           .format(self.data.iloc[:, 0][index].astype(str),
-                                                   self.data.iloc[:, 1][index].astype(str),
-                                                   self.data.iloc[:, 2][index].astype(str),
-                                                   self.data.iloc[:, 3][index].astype(str)))
+                        self.label.setHtml("<p style='color:white'>频率：{0}</p>"
+                                           .format(self.data.iloc[:, 0][index].astype(str)))
                         self.label.setPos(mousePoint.x(), mousePoint.y())
                     self.vLine.setPos(mousePoint.x())
                     self.hLine.setPos(mousePoint.y())

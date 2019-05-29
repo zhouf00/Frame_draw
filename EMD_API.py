@@ -20,9 +20,7 @@ class ParaEMD(object):
         self.LblListLcn = ['叶片1', '叶片2', '叶片3']
 
     def tmp_list(self):
-        res = ["20190501", "20190502", "20190504", "20190508", "20190515"]
-        #res = self.mylist
-        return res
+        return self.mylist
 
     def bbb(self):
         data1 = np.random.rand(2,2)
@@ -43,6 +41,12 @@ class ParaEMD(object):
         return a[0], a[1], a[2]
 
     def EMDTRS(self, *args):
-        for i in range(10):
-            self.mylist.append("abc%d"%i)
-        time.sleep(10)
+        res = ["20190501", "20190502", "20190504", "20190508", "20190515"]
+        for var in res:
+            self.mylist.append(var)
+
+
+    def test1_data(self):
+        file_path = os.path.join(os.getcwd(), "data\\1K")
+        file_name = os.path.join(file_path, "1K_FFT1.csv")
+        return file_name

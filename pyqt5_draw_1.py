@@ -5,8 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout,
                              QDateEdit, QSpacerItem,QFrame, QSizePolicy, QSplitter,
                              QRadioButton, QGroupBox,QCheckBox,QLineEdit, QAction)
 from PyQt5.QtCore import Qt, QDate, QRect
-from Mythreading import *
-#from pyqt5_graph import Graph_Func
+from Mythreading import MyThread
 from pyqt5_graph import Graph_Func
 from EMD_API import ParaEMD
 
@@ -20,6 +19,7 @@ class Qt_Test_Frame(QMainWindow):
         super().__init__()
 
         self.graph = Graph_Func()
+        self.graph2 = Graph_Func()
         # 初始化界面
         self._initUI()
 
@@ -27,7 +27,7 @@ class Qt_Test_Frame(QMainWindow):
 
     def _initUI(self):
         self.setWindowTitle("风机采集图形化v2")
-        self.resize(800, 600)
+        self.resize(1024, 768)
 
         wwg = QWidget()
 
@@ -190,13 +190,13 @@ class Qt_Test_Frame(QMainWindow):
         vbox2.setLayout(v4_group_prior)
         vbox3.setLayout(v4_group_time)
         v4_wlayout.addItem(QSpacerItem(50, 20))
-        v4_wlayout.addWidget(vbox1)
+        v4_wlayout.addWidget(vbox1,1)
         v4_wlayout.addItem(QSpacerItem(50, 20))
-        v4_wlayout.addWidget(vbox2)
+        v4_wlayout.addWidget(vbox2,1)
         v4_wlayout.addItem(QSpacerItem(50, 20))
-        v4_wlayout.addWidget(vbox3)
+        v4_wlayout.addWidget(vbox3,0)
         v4_wlayout.addItem(QSpacerItem(50, 20))
-        v4_wlayout.addWidget(v4_button)
+        v4_wlayout.addWidget(v4_button,1)
         v4_wlayout.addItem(QSpacerItem(50, 20))
 
         # 事件绑定
@@ -219,7 +219,8 @@ class Qt_Test_Frame(QMainWindow):
     def _fouth_right(self):
         # 加载波形图
         #self.tmp_plt = self.graph.plt_init()
-        self.v5_wlayout.addWidget(self.graph)
+        self.v5_wlayout.addWidget(self.graph, 2)
+        self.v5_wlayout.addWidget(self.graph2, 1)
 
     def _my_line(self, var=True):
         # var 为True时，为横线，否则为竖线
@@ -245,8 +246,8 @@ class Qt_Test_Frame(QMainWindow):
         b = self.h1_combox2.currentText()
         c = self.h1_combox3.currentText()
         d = self.h1_combox4.currentText()
-        e = self.h2_date1.dateTime().toString("yy-MM-dd")
-        f = self.h2_date2.dateTime().toString("yy-MM-dd")
+        e = self.h2_date1.dateTime().toString("yyyy/MM/dd")
+        f = self.h2_date2.dateTime().toString("yyyy/MM/dd")
         self.start_thread = MyThread(target=self._start_thread, args=(a, b, c, d, e, f))
         self.start_thread.start()
 
@@ -262,12 +263,21 @@ class Qt_Test_Frame(QMainWindow):
         :param args: 风场， 风机， 叶片ID, 信号类型，开始时间， 结束时间
         :return:
         """
-        print("*****运行键打印*****")
-        for var in args:
-            print(var)
+        # print("*****运行键打印*****")
+        # for var in args:
+        #     print(var)
+        #
+        location = args[0]
+        fan = args[1]
+        fanid = args[2]
+        typedata = args[3]
+        start_time = args[4]
+        end_time = args[5]
+        ParaEMD().EMDTRS(location,fan,fanid,typedata,start_time,end_time)
+        #主程序
 
-        # 等函数执行完后，返回时间选择列表
         self.v4_combox1.clear()
+        # 等函数执行完后，返回时间选择列表 参数为时间列表
         self.v4_combox1.addItems(ParaEMD().tmp_list())
         print("*****运行键打印*****")
 
@@ -303,14 +313,18 @@ class Qt_Test_Frame(QMainWindow):
         c = self.v4_combox1.currentText()
         d = self.h1_combox3.currentText()
 
-        # 在下面函数传入数据列表
-        #self.graph.data_to_dict()
+        # 在下面函数传入数据列表 参数为：CSV文件
+        self.graph.set_data(ParaEMD().test1_data())#幅值数据
+        #添加题注的三个gD
+
+        self.graph2.set_data(ParaEMD().test1_data())#gD数据
 
         # 下面为画图操作，无不用修改
         #self.v5_wlayout.removeWidget(self.graph)
         #self.tmp_plt = self.graph.plt_show(b)
         #self.v5_wlayout.addWidget(self.tmp_plt)
         self.graph.plt_show(b)
+        self.graph2.plt_show(b)
         print("*****显示打印*****")
 
 
